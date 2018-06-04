@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackOnBuild>true</PackOnBuild>
+    <PackageId>nodewire</PackageId>
+    <PackageVersion>0.0.1</PackageVersion>
+    <Authors>Ahmad Sadiq (sadiq.a.ahmad@gmail.com)</Authors>
+    <Description>NodeWire</Description>
+    <RootNamespace>nodewire</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="SerialPortLib" Version="1.0.12" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
+    <PackageReference Include="sharpconfig" Version="3.2.6" />
+    <PackageReference Include="NuGet.Build.Packaging" Version="0.2.0" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,4 @@
+﻿https://docs.microsoft.com/en-us/nuget/quickstart/create-and-publish-a-package-using-visual-studio
+
+dotnet nuget push nodewire.0.0.1.nupkg -k oy2hiukavbmi7cm4xnxalorevfpyf5aubl2psqinicscvu -s https://api.nuget.org/v3/index.json
+
