@@ -4,7 +4,6 @@ using System.Dynamic;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
-using SharpConfig;
 
 namespace nodewire
 {
@@ -24,17 +23,14 @@ namespace nodewire
         public Node(String address, Link link, dynamic controller = null)
         {
             _link = link;
-            try{
-                var config = Configuration.LoadFromFile("nw.cfg");
-                myaddress = config["node"]["name"].StringValue;
-            }
-            catch
+            var config = new IniFile("nw.cfg");
+            myaddress = config.GetValue("node", "name");
+            if(myaddress==null)
             {
                 myaddress = address;
-                var config = new Configuration();
-                config["node"]["name"].StringValue = myaddress;
-                config["node"]["id"].StringValue = "none";
-                config.SaveToFile("nw.cfg");
+                config.SetValue("node", "name", myaddress);
+                config.SetValue("node", "id", "none");
+                config.Save("nw.cfg");
             }
 
             if(controller!=null)
@@ -146,14 +142,14 @@ namespace nodewire
                         case "get":
                             if (result.Port == "name")
                             {
-                                var config = Configuration.LoadFromFile("nw.cfg");
-                                var nodname = config["node"]["name"].StringValue;
+                                var config = new IniFile("nw.cfg");
+                                var nodname = config.GetValue("node", "name");
                                 _link.send(new PlainMessage{address=result.sender, command = "ThisIs", sender=myaddress});
                             }
                             else if (result.Port == "id")
                             {
-                                var config = Configuration.LoadFromFile("nw.cfg");
-                                var id = config["node"]["id"].StringValue;
+                                var config = new IniFile("nw.cfg");
+                                var id = config.GetValue("node", "id");
                                 _link.send(new PlainMessage($"{result.sender} id {id} {myaddress}"));
                             }
                             else if(result.Port == "ports")
@@ -186,18 +182,18 @@ namespace nodewire
                         case "set":
                             if (result.Port == "name")
                             {
-                                var config = Configuration.LoadFromFile("nw.cfg");
-                                config["node"]["name"].StringValue = result.Value;
+                                var config = new IniFile("nw.cfg");
+                                config.SetValue("node", "name", result.Value);
                                 myaddress = result.Value;
-                                config.SaveToFile("nw.cfg");
+                                config.Save("nw.cfg");
                                 _link.send(new PlainMessage { address = result.sender, command = "ThisIs", sender = myaddress });
                             }
                             else if (result.Port == "id")
                             {
-                                var config = Configuration.LoadFromFile("nw.cfg");
-                                config["node"]["id"].StringValue = result.Value;
+                                var config = new IniFile("nw.cfg");
+                                config.SetValue("node", "id", result.Value);
                                 var id = result.Value;
-                                config.SaveToFile("nw.cfg");
+                                config.Save("nw.cfg");
                                 _link.send(new PlainMessage($"{result.address} id {id} {myaddress}"));
                             }
                             else
