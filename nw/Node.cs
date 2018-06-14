@@ -7,10 +7,14 @@ using System.Linq;
 
 namespace nodewire
 {
-    public class Node: DynamicObject
+    public class Node : DynamicObject
     {
         String myaddress;
         bool announcing = true;
+
+        List<Remote> nodes = new List<Remote>();
+        Dictionary<string, when_delegate> when_list = new Dictionary<string, when_delegate>();
+
         Link _link;
         Dictionary<string, object> inputs = new Dictionary<string, object>();
         Dictionary<string, object> outputs = new Dictionary<string, object>();
@@ -20,12 +24,18 @@ namespace nodewire
         delegate dynamic get_delegate();
         delegate void set_delegate(dynamic p);
 
+        public delegate void when_delegate(PlainMessage msg);
+
+        delegate void dlg_connected();
+        dlg_connected fn_connected = null;
+        set_delegate fn_got_node = null;
+
         public Node(String address, Link link, dynamic controller = null)
         {
             _link = link;
             var config = new IniFile("nw.cfg");
             myaddress = config.GetValue("node", "name");
-            if(myaddress==null)
+            if (myaddress == null)
             {
                 myaddress = address;
                 config.SetValue("node", "name", myaddress);
@@ -33,7 +43,7 @@ namespace nodewire
                 config.Save("nw.cfg");
             }
 
-            if(controller!=null)
+            if (controller != null)
             {
                 MethodInfo[] methodInfos = controller.GetType()
                            .GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -47,11 +57,20 @@ namespace nodewire
                 {
                     setfns.Add(s.Name.Substring(3), s.CreateDelegate(typeof(set_delegate), controller));
                 }
+
+                var fncon = from method in methodInfos where method.Name == "connected" select method;
+                if(fncon.Count()!=0)
+                    fn_connected = fncon.First().CreateDelegate(typeof(dlg_connected), controller);
+                var fnnode = from method in methodInfos where method.Name == "got_node" select method;
+                if (fnnode.Count() != 0)
+                    fn_got_node = fnnode.First().CreateDelegate(typeof(set_delegate), controller);
             }
         }
 
-        public string Inputs{
-            set{
+        public string Inputs
+        {
+            set
+            {
                 foreach (var port in value.Split())
                     inputs[port] = null;
             }
@@ -66,6 +85,18 @@ namespace nodewire
             }
         }
 
+        public Remote ConnectNode(String name)
+        {
+            Remote r = new Remote(name, myaddress, _link);
+            nodes.Add(r);
+            return r;
+        }
+
+        public void When(String condition, when_delegate func)
+        {
+            when_list.Add(condition, func);
+        }
+
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             if (inputs.ContainsKey(binder.Name))
@@ -73,7 +104,7 @@ namespace nodewire
                 result = inputs[binder.Name];
                 return true;
             }
-            else if(getfns.ContainsKey(binder.Name))
+            else if (getfns.ContainsKey(binder.Name))
             {
                 dynamic fn = getfns[binder.Name];
                 result = fn();
@@ -93,19 +124,19 @@ namespace nodewire
 
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-            if(binder.Name.StartsWith("on_") && inputs.ContainsKey(binder.Name.Substring(3)))
+            if (binder.Name.StartsWith("on_") && inputs.ContainsKey(binder.Name.Substring(3)))
             {
                 string port = binder.Name.Substring(3);
                 setfns[port] = value;
                 return true;
             }
-            else if(binder.Name.StartsWith("get_") && outputs.ContainsKey(binder.Name.Substring(4)))
+            else if (binder.Name.StartsWith("get_") && outputs.ContainsKey(binder.Name.Substring(4)))
             {
                 string port = binder.Name.Substring(4);
                 setfns[port] = value;
                 return true;
             }
-            else if(setfns.ContainsKey(binder.Name))
+            else if (setfns.ContainsKey(binder.Name))
             {
                 dynamic fn = setfns[binder.Name];
                 fn(value);
@@ -144,15 +175,16 @@ namespace nodewire
                             {
                                 var config = new IniFile("nw.cfg");
                                 var nodname = config.GetValue("node", "name");
-                                _link.send(new PlainMessage{address=result.sender, command = "ThisIs", sender=myaddress});
+                                _link.send(new PlainMessage { address = result.sender, command = "ThisIs", sender = myaddress });
                             }
                             else if (result.Port == "id")
                             {
                                 var config = new IniFile("nw.cfg");
                                 var id = config.GetValue("node", "id");
                                 _link.send(new PlainMessage($"{result.sender} id {id} {myaddress}"));
+                                if (fn_connected != null) fn_connected();
                             }
-                            else if(result.Port == "ports")
+                            else if (result.Port == "ports")
                             {
                                 string p = "";
                                 foreach (var el in inputs)
@@ -164,11 +196,11 @@ namespace nodewire
                             }
                             else
                             {
-                                if(inputs.ContainsKey(result.Port))
+                                if (inputs.ContainsKey(result.Port))
                                 {
                                     _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {inputs[result.Port]} {myaddress}"));
                                 }
-                                else if(getfns.ContainsKey(result.Port))
+                                else if (getfns.ContainsKey(result.Port))
                                 {
                                     dynamic fn = getfns[result.Port];
                                     _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {fn()} {myaddress}"));
@@ -218,8 +250,32 @@ namespace nodewire
                             announcing = false;
                             break;
                         case "node":
+                            {
+                                var nodename = result.parameters[1];
+                                var node = ((IEnumerable<Remote>)nodes).Cast<dynamic>().Where(p => p.address == nodename);
+                                if (node.Count() != 0)
+                                {
+                                    foreach (var port in result.Value)
+                                    {
+                                        node.First().set(port.Name, port.Value);
+                                    }
+                                    if (fn_got_node!=null) fn_got_node(node.First());
+                                }
+                            }
                             break;
                         case "portvalue":
+                            {
+                                var nodename = result.sender;
+                                var node = ((IEnumerable<Remote>)nodes).Cast<dynamic>().Where(p => p.address == nodename);
+                                if (node.Count() != 0)
+                                {
+                                    node.First().set(result.Port, result.Value);
+                                }
+                                var cond = result.sender + "." + result.Port;
+                                if(when_list.ContainsKey(cond)){
+                                    when_list[cond](result);
+                                }
+                            }
                             break;
                     }
                     Console.WriteLine(result);
@@ -233,7 +289,7 @@ namespace nodewire
 
         public async Task announce()
         {
-            while(true)
+            while (true)
             {
                 await Task.Delay(5000);
                 if (announcing) _link.send(new PlainMessage($"cp ThisIs {myaddress}"));

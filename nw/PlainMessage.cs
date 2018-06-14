@@ -12,6 +12,7 @@ namespace nodewire
         private String port;
         private dynamic _value;
         public String sender;
+        public String sender_instance;
 
         public PlainMessage()
         {
@@ -138,6 +139,17 @@ namespace nodewire
             address = tokens[0];
             command = tokens[1];
             sender = tokens[tokens.Count - 1];
+            if(address.Contains(":"))
+            {
+                address = address.Split(':')[1];
+            }
+            if (sender.Contains(":"))
+            {
+                sender_instance = sender.Split(':')[0];
+                sender = sender.Split(':')[1];
+            }
+            else
+                sender_instance = "";
             if(tokens.Count>3) parameters = tokens.GetRange(2, tokens.Count - 3);
 
             if (tokens.Count == 5 && (command=="portvalue" || command=="set"))
@@ -163,6 +175,8 @@ namespace nodewire
             {
                 port = parameters[0];
             }
+            if(command=="node")
+                _value = JObject.Parse(parameters[0]);
 
         }
     }
