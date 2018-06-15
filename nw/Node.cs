@@ -182,7 +182,7 @@ namespace nodewire
                                 var config = new IniFile("nw.cfg");
                                 var id = config.GetValue("node", "id");
                                 _link.send(new PlainMessage($"{result.sender} id {id} {myaddress}"));
-                                if (fn_connected != null) fn_connected();
+                                fn_connected?.Invoke();
                             }
                             else if (result.Port == "ports")
                             {
@@ -259,7 +259,7 @@ namespace nodewire
                                     {
                                         node.First().set(port.Name, port.Value);
                                     }
-                                    if (fn_got_node!=null) fn_got_node(node.First());
+                                    fn_got_node?.Invoke(node.First());
                                 }
                             }
                             break;
