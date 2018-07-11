@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Dynamic;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace nodewire
 {
@@ -44,7 +45,8 @@ namespace nodewire
         {
             if (ports.ContainsKey(binder.Name))
             {
-                _link.send(new PlainMessage($"{myaddress} set {binder.Name} {value} {username}"));
+                string JsonString = JsonConvert.SerializeObject(value, Formatting.None, new JsonSerializerSettings { });
+                _link.send(new PlainMessage($"{myaddress} set {binder.Name} {JsonString} {username}"));
                 return true;
             }
             else

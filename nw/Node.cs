@@ -4,6 +4,7 @@ using System.Dynamic;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace nodewire
 {
@@ -47,8 +48,8 @@ namespace nodewire
             {
                 MethodInfo[] methodInfos = controller.GetType()
                            .GetMethods(BindingFlags.Public | BindingFlags.Instance);
-                var getmethods = from method in methodInfos where method.Name.StartsWith("get_") select method;
-                var setmethods = from method in methodInfos where method.Name.StartsWith("on_") select method;
+                var getmethods = from method in methodInfos where method.Name.StartsWith("Get_") select method;
+                var setmethods = from method in methodInfos where method.Name.StartsWith("On_") select method;
                 foreach (var g in getmethods)
                 {
                     getfns.Add(g.Name.Substring(4), g.CreateDelegate(typeof(get_delegate), controller));
@@ -58,10 +59,10 @@ namespace nodewire
                     setfns.Add(s.Name.Substring(3), s.CreateDelegate(typeof(set_delegate), controller));
                 }
 
-                var fncon = from method in methodInfos where method.Name == "connected" select method;
+                var fncon = from method in methodInfos where method.Name == "Connected" select method;
                 if(fncon.Count()!=0)
                     fn_connected = fncon.First().CreateDelegate(typeof(dlg_connected), controller);
-                var fnnode = from method in methodInfos where method.Name == "got_node" select method;
+                var fnnode = from method in methodInfos where method.Name == "GotNode" select method;
                 if (fnnode.Count() != 0)
                     fn_got_node = fnnode.First().CreateDelegate(typeof(set_delegate), controller);
             }
@@ -124,13 +125,13 @@ namespace nodewire
 
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-            if (binder.Name.StartsWith("on_") && inputs.ContainsKey(binder.Name.Substring(3)))
+            if (binder.Name.StartsWith("On_") && inputs.ContainsKey(binder.Name.Substring(3)))
             {
                 string port = binder.Name.Substring(3);
                 setfns[port] = value;
                 return true;
             }
-            else if (binder.Name.StartsWith("get_") && outputs.ContainsKey(binder.Name.Substring(4)))
+            else if (binder.Name.StartsWith("Get_") && outputs.ContainsKey(binder.Name.Substring(4)))
             {
                 string port = binder.Name.Substring(4);
                 setfns[port] = value;
@@ -140,19 +141,22 @@ namespace nodewire
             {
                 dynamic fn = setfns[binder.Name];
                 fn(value);
-                _link.send(new PlainMessage($"re portvalue {binder.Name} {value} {myaddress}"));
+                string JsonString = JsonConvert.SerializeObject(value, Formatting.None, new JsonSerializerSettings { });
+                _link.send(new PlainMessage($"re portvalue {binder.Name} {JsonString} {myaddress}"));
                 return true;
             }
             else if (inputs.ContainsKey(binder.Name))
             {
                 inputs[binder.Name] = value;
-                _link.send(new PlainMessage($"re portvalue {binder.Name} {value} {myaddress}"));
+                string JsonString = JsonConvert.SerializeObject(value, Formatting.None, new JsonSerializerSettings { });
+                _link.send(new PlainMessage($"re portvalue {binder.Name} {JsonString} {myaddress}"));
                 return true;
             }
             else if (outputs.ContainsKey(binder.Name))
             {
                 outputs[binder.Name] = value;
-                _link.send(new PlainMessage($"re portvalue {binder.Name} {value} {myaddress}"));
+                string JsonString = JsonConvert.SerializeObject(value, Formatting.None, new JsonSerializerSettings { });
+                _link.send(new PlainMessage($"re portvalue {binder.Name} {JsonString} {myaddress}"));
                 return true;
             }
             else
@@ -161,7 +165,7 @@ namespace nodewire
             }
         }
 
-        public async Task process()
+        public async Task Process()
         {
             while (true)
             {
@@ -234,12 +238,14 @@ namespace nodewire
                                 {
                                     dynamic fn = setfns[result.Port];
                                     fn(result.Value);
-                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {result.Value} {myaddress}"));
+                                    string JsonString = JsonConvert.SerializeObject(result.Value, Formatting.None, new JsonSerializerSettings { });
+                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {JsonString} {myaddress}"));
                                 }
                                 else if (inputs.ContainsKey(result.Port))
                                 {
                                     inputs[result.Port] = result.Value;
-                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {result.Value} {myaddress}"));
+                                    string JsonString = JsonConvert.SerializeObject(result.Value, Formatting.None, new JsonSerializerSettings { });
+                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {JsonString} {myaddress}"));
                                 }
                             }
                             break;
@@ -287,7 +293,7 @@ namespace nodewire
             }
         }
 
-        public async Task announce()
+        public async Task Announce()
         {
             while (true)
             {
@@ -298,7 +304,7 @@ namespace nodewire
 
         public async Task Run()
         {
-            await Task.WhenAll(process(), announce());
+            await Task.WhenAll(Process(), Announce());
         }
     }
 }

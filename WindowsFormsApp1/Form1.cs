@@ -14,7 +14,7 @@ namespace WindowsFormsApp1
             InitializeComponent();
         }
 
-        private async void button1_Click(object sender, EventArgs e)
+        private async void Button1_Click(object sender, EventArgs e)
         {
             button1.Enabled = false;
             link = new SocketLink
@@ -25,7 +25,7 @@ namespace WindowsFormsApp1
                 instance = "lrsnr49yxurz"
             };
             await link.connect();
-            controller ctrl = new controller { radio = radioButton1 };
+            Controller ctrl = new Controller { radio = radioButton1 };
             node = new Node("c#", link, ctrl) { Inputs = "led" };
             await node.Run();
         }

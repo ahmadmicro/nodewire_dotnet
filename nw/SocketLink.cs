@@ -17,7 +17,6 @@ namespace nodewire
         public SocketLink()
         {
             client = new TcpClient();
-            //connect();
         }
 
         public async Task connect()

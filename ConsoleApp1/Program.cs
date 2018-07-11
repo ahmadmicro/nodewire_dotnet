@@ -7,17 +7,17 @@ namespace ConsoleApp1
     class Controller
     {
         public Node node = null;
-        public void on_led(dynamic p)
+        public void On_led(dynamic p)
         {
             Console.WriteLine("LED on");
         }
 
-        public dynamic get_switch()
+        public dynamic Get_switch()
         {
             return 1;
         }
 
-        public void connected()
+        public void Connected()
         {
             var node03 = node.ConnectNode("node03");
             node.When("node03.2", (PlainMessage msg) =>
@@ -26,10 +26,10 @@ namespace ConsoleApp1
             });
         }
 
-        public void got_node(dynamic node)
+        public void GotNode(dynamic node)
         {
             if (node.address == "node03")
-                node["2"] = 0;
+                node["2"] = 1;
         }
     }
 

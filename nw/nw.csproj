@@ -8,6 +8,14 @@
     <Authors>Ahmad Sadiq (sadiq.a.ahmad@gmail.com)</Authors>
     <Description>NodeWire</Description>
     <RootNamespace>nodewire</RootNamespace>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>0.0.3</Version>
+    <Product>NodeWire</Product>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>1701;1702;1705</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

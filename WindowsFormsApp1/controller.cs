@@ -2,10 +2,10 @@
 
 namespace WindowsFormsApp1
 {
-    class controller
+    class Controller
     {
         public RadioButton radio;
-        public void on_led(dynamic p)
+        public void On_led(dynamic p)
         {
             if (p == 1) radio.Checked = true; else radio.Checked = false;
         }

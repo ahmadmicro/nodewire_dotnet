@@ -73,6 +73,7 @@ namespace nodewire
             if (c == '{') return '}';
             if (c == '[') return ']';
             if (c == '(') return ')';
+            if (c == '\"') return '\"';
             return c;
         }
 
@@ -108,12 +109,7 @@ namespace nodewire
                         tokcount += 1;
                     }
                 }
-                else if (@" '[({""".Contains(c.ToString()) && c == sep)
-                {
-                    tokcount += 1;
-                    token += c;
-                }
-                else if (@" '])}""".Contains(c.ToString()) && c == opposite(sep))
+                else if (" '])}\"".Contains(c.ToString()) && c == opposite(sep))
                 {
                     tokcount -= 1;
                     if (tokcount == 0)
@@ -130,6 +126,11 @@ namespace nodewire
                     }
                     else
                         token += c;
+                }
+                else if (" '[({\"".Contains(c.ToString()) && c == sep)
+                {
+                    tokcount += 1;
+                    token += c;
                 }
                 else
                     token += c;
@@ -169,7 +170,7 @@ namespace nodewire
                     _value = fv;
                 }
                 else
-                    _value = parameters[1];
+                    _value = parameters[1].Substring(1, parameters[1].Length-2);
             }
             else if(tokens.Count==4 && command =="get")
             {

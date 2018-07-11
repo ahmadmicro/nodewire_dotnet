@@ -1,20 +1,40 @@
 ﻿using System;
 using nodewire;
 using Newtonsoft.Json.Linq;
-using System.Threading.Tasks;
 
-namespace con
+namespace ConsoleApp2
 {
     class Controller
     {
-        public void on_led(dynamic p)
+        public Node node = null;
+        public void On_led(dynamic p)
         {
             Console.WriteLine("LED on");
         }
 
-        public dynamic get_switch()
+        public dynamic Get_switch()
         {
             return 1;
+        }
+
+        public void Connected()
+        {
+            var node03 = node.ConnectNode("seismic");
+            node.When("seismic.status", (PlainMessage msg) =>
+            {
+                Console.WriteLine(msg);
+            });
+        }
+
+        public void GotNode(dynamic node)
+        {
+            if (node.address == "seismic")
+            {
+                dynamic sensor = new JObject();
+                sensor.id = 1;
+                sensor.sid = 2;
+                node.sensor = sensor;
+            }
         }
     }
 
@@ -22,11 +42,12 @@ namespace con
     {
         static void Main(string[] args)
         {
-            SocketLink link = new SocketLink{ 
-                server="dashboard.nodewire.org", 
-                account="sadiq.a.ahmad@gmail.com", 
-                pwd="secret", 
-                instance="lrsnr49yxurz"
+            SocketLink link = new SocketLink
+            {
+                server = "cloud.nodewire.org",
+                account = "sadiq.a.ahmad@gmail.com",
+                pwd = "secret",
+                instance = "lrsnr49yxurz"
             };
 
 
@@ -36,10 +57,12 @@ namespace con
             Controller ctrl = new Controller();
 
             var node = new Node("node01", link, ctrl);
+            ctrl.node = node;
+
             node.Inputs = "led";
             node.Outputs = "switch";
-            var r = node.Run();
-            r.Wait();
+            node.Run();
+            Console.ReadLine();
         }
 
 
