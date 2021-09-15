@@ -15,6 +15,11 @@ namespace nodewire
 
         }
 
+        public virtual bool connected()
+        {
+            return false;
+        }
+
         public virtual async Task<PlainMessage> Receive() {
             await Task.Delay(1);
             return new PlainMessage();

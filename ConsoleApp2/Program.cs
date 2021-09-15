@@ -51,7 +51,7 @@ namespace ConsoleApp2
             };
 
 
-            var c = link.connect();
+            var c = link.Connect();
             c.Wait();
 
             Controller ctrl = new Controller();
@@ -61,7 +61,7 @@ namespace ConsoleApp2
 
             node.Inputs = "led";
             node.Outputs = "switch";
-            node.Run();
+            node.Run().Wait();
             Console.ReadLine();
         }
 

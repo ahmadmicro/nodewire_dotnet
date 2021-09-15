@@ -24,7 +24,7 @@ namespace WindowsFormsApp1
                 pwd = "secret",
                 instance = "lrsnr49yxurz"
             };
-            await link.connect();
+            await link.Connect();
             Controller ctrl = new Controller { radio = radioButton1 };
             node = new Node("c#", link, ctrl) { Inputs = "led" };
             await node.Run();

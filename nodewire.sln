@@ -15,6 +15,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApp2", "ConsoleApp2\ConsoleApp2.csproj", "{5E05DE0E-4E58-4AF6-BF8C-1EC6A395B718}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biometric", "Biometric\Biometric.csproj", "{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,18 @@ Global
 		{5E05DE0E-4E58-4AF6-BF8C-1EC6A395B718}.Release|iPhone.Build.0 = Release|Any CPU
 		{5E05DE0E-4E58-4AF6-BF8C-1EC6A395B718}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{5E05DE0E-4E58-4AF6-BF8C-1EC6A395B718}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|iPhone.Build.0 = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{61A0B8B6-4D66-495A-A4F9-F95E179BDC8C}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

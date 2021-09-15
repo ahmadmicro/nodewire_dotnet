@@ -39,14 +39,14 @@ namespace ConsoleApp1
         {
             SocketLink link = new SocketLink
             {
-                server = "dashboard.nodewire.org",
+                server = "localhost",
                 account = "sadiq.a.ahmad@gmail.com",
-                pwd = "secret",
-                instance = "lrsnr49yxurz"
+                pwd = "fupbvxvuce",
+                instance = "9ie673ff3bei"
             };
 
 
-            var c = link.connect();
+            var c = link.Connect();
             c.Wait();
 
             Controller ctrl = new Controller();

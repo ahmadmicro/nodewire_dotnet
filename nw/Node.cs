@@ -10,7 +10,7 @@ namespace nodewire
 {
     public class Node : DynamicObject
     {
-        String myaddress;
+        String myaddress, myid;
         bool announcing = true;
 
         List<Remote> nodes = new List<Remote>();
@@ -29,6 +29,7 @@ namespace nodewire
 
         delegate void dlg_connected();
         dlg_connected fn_connected = null;
+        dlg_connected fn_disconnected = null;
         set_delegate fn_got_node = null;
 
         public Node(String address, Link link, dynamic controller = null)
@@ -36,6 +37,7 @@ namespace nodewire
             _link = link;
             var config = new IniFile("nw.cfg");
             myaddress = config.GetValue("node", "name");
+            myid = config.GetValue("node", "id");
             if (myaddress == null)
             {
                 myaddress = address;
@@ -62,6 +64,9 @@ namespace nodewire
                 var fncon = from method in methodInfos where method.Name == "Connected" select method;
                 if(fncon.Count()!=0)
                     fn_connected = fncon.First().CreateDelegate(typeof(dlg_connected), controller);
+                var fndiscon = from method in methodInfos where method.Name == "Disconnected" select method;
+                if (fndiscon.Count() != 0)
+                    fn_disconnected = fndiscon.First().CreateDelegate(typeof(dlg_connected), controller);
                 var fnnode = from method in methodInfos where method.Name == "GotNode" select method;
                 if (fnnode.Count() != 0)
                     fn_got_node = fnnode.First().CreateDelegate(typeof(set_delegate), controller);
@@ -73,7 +78,7 @@ namespace nodewire
             set
             {
                 foreach (var port in value.Split())
-                    inputs[port] = null;
+                    inputs[port] = 0;
             }
         }
 
@@ -141,6 +146,7 @@ namespace nodewire
             {
                 dynamic fn = setfns[binder.Name];
                 fn(value);
+                inputs[binder.Name] = value;
                 string JsonString = JsonConvert.SerializeObject(value, Formatting.None, new JsonSerializerSettings { });
                 _link.send(new PlainMessage($"re portvalue {binder.Name} {JsonString} {myaddress}"));
                 return true;
@@ -167,7 +173,7 @@ namespace nodewire
 
         public async Task Process()
         {
-            while (true)
+            while (_link.connected())
             {
                 try
                 {
@@ -186,7 +192,7 @@ namespace nodewire
                                 var config = new IniFile("nw.cfg");
                                 var id = config.GetValue("node", "id");
                                 _link.send(new PlainMessage($"{result.sender} id {id} {myaddress}"));
-                                fn_connected?.Invoke();
+                                
                             }
                             else if (result.Port == "ports")
                             {
@@ -197,17 +203,18 @@ namespace nodewire
                                     p += el.Key + " ";
 
                                 _link.send(new PlainMessage($"{result.sender} ports {p}{myaddress}"));
+                                fn_connected?.Invoke();
                             }
                             else
                             {
-                                if (inputs.ContainsKey(result.Port))
-                                {
-                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {inputs[result.Port]} {myaddress}"));
-                                }
-                                else if (getfns.ContainsKey(result.Port))
+                                if(getfns.ContainsKey(result.Port))
                                 {
                                     dynamic fn = getfns[result.Port];
                                     _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {fn()} {myaddress}"));
+                                }
+                                else if(inputs.ContainsKey(result.Port))
+                                {
+                                    _link.send(new PlainMessage($"{result.sender} portvalue {result.Port} {inputs[result.Port]} {myaddress}"));
                                 }
                                 else if (outputs.ContainsKey(result.Port))
                                 {
@@ -228,9 +235,9 @@ namespace nodewire
                             {
                                 var config = new IniFile("nw.cfg");
                                 config.SetValue("node", "id", result.Value);
-                                var id = result.Value;
+                                myid = result.Value;
                                 config.Save("nw.cfg");
-                                _link.send(new PlainMessage($"{result.address} id {id} {myaddress}"));
+                                _link.send(new PlainMessage($"{result.address} id {myid} {myaddress}"));
                             }
                             else
                             {
@@ -284,7 +291,10 @@ namespace nodewire
                             }
                             break;
                     }
-                    Console.WriteLine(result);
+                }
+                catch(System.IO.IOException ex)
+                {
+                    fn_disconnected?.Invoke();
                 }
                 catch (Exception ex)
                 {
@@ -297,14 +307,24 @@ namespace nodewire
         {
             while (true)
             {
-                await Task.Delay(5000);
-                if (announcing) _link.send(new PlainMessage($"cp ThisIs {myaddress}"));
+                if (announcing)
+                {
+                    await Task.Delay(10000);
+                    _link.send(new PlainMessage($"cp ThisIs {myid} {myaddress}"));
+                }
+                else
+                {
+                    await Task.Delay(2000*10);
+                    _link.send(new PlainMessage($"cp keepalive {myaddress}"));
+                }
+                    
             }
         }
 
         public async Task Run()
         {
             await Task.WhenAll(Process(), Announce());
+            Console.WriteLine("terminated");
         }
     }
 }

@@ -21,6 +21,7 @@ namespace nodewire
 
         public PlainMessage(string msg)
         {
+            // System.Console.WriteLine(msg);
             Parse(msg);
         }
 
@@ -65,7 +66,7 @@ namespace nodewire
             string p = "";
             foreach (var el in parameters)
                 p += el + " ";
-            return address + " " + command + " " + p + sender;
+            return address + " " + command + " " + p + sender + "\n";
         }
 
         private char opposite(char c)
@@ -169,8 +170,12 @@ namespace nodewire
                 {
                     _value = fv;
                 }
+                else if (parameters[1].StartsWith("\"") || parameters[1].StartsWith("\'"))
+                {
+                    _value = parameters[1].Substring(1, parameters[1].Length - 2);
+                }
                 else
-                    _value = parameters[1].Substring(1, parameters[1].Length-2);
+                    _value = parameters[1];
             }
             else if(tokens.Count==4 && command =="get")
             {

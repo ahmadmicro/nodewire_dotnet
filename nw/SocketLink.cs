@@ -14,12 +14,14 @@ namespace nodewire
         public string pwd;
         public string instance;
 
+        private bool failed = false;
+
         public SocketLink()
         {
             client = new TcpClient();
         }
 
-        public async Task connect()
+        public async Task Connect()
         {
             if (!client.Connected)
             {
@@ -30,17 +32,50 @@ namespace nodewire
                 writer.AutoFlush = true;
             }
 
+            failed = false;
+
             writer.WriteLine($"cp Gateway user={account} pwd={pwd} {instance}");
+        }
+
+        public void Disconnect()
+        {
+            client.Close();
         }
 
         public async override System.Threading.Tasks.Task<PlainMessage> Receive()
         {
-            return new PlainMessage(await reader.ReadLineAsync());
+            try
+            {
+                if(client.Connected)
+                    return new PlainMessage(await reader.ReadLineAsync());
+                else
+                {
+                    failed = true;
+                    throw new System.IO.IOException();
+                }
+            }
+            catch (System.NullReferenceException)
+            {
+                failed = true;
+                throw new System.IO.IOException();
+            }
+            
+        }
+
+        public override bool connected()
+        {
+            return client.Connected && !failed;
         }
 
         public override void send(PlainMessage message)
         {
-            writer.WriteLine(message.ToString());
+            if(client.Connected)
+                writer.WriteLine(message.ToString());
+            else
+            {
+                failed = true;
+                throw new System.IO.IOException();
+            }
         }
     }
 }
